@@ -153,7 +153,7 @@ bool processLogFile (const std::string& filename,
 																								 prev_resource;
 	std::unordered_map<std::string, std::pair<int, time_t>> failed_attempts;
 	std::unordered_map<std::string, std::pair<int, time_t>>::iterator prev_attempt;
-	std::vector<int> freq_per_second(360, 0);
+	std::vector<int> freq_per_second(3600, 0);
 
 	while (std::getline(logFile, request)) {
 		success = parseRequest(request, host, curr_time, resource, size);
@@ -218,9 +218,9 @@ bool processLogFile (const std::string& filename,
 		// Compute the next window size and corresponding slots
 		//----------------------------------------------------------------------------------------------
 		diff_seconds = difftime(curr_seconds, prev_seconds);
-		curr_second_of_hour = (curr_time.tm_min * 60 + curr_time.tm_sec) % 360;
-		prev_second_of_hour = (prev_time.tm_min * 60 + prev_time.tm_sec) % 360;
-		while (diff_seconds > 360) {
+		curr_second_of_hour = curr_time.tm_min * 60 + curr_time.tm_sec;
+		prev_second_of_hour = prev_time.tm_min * 60 + prev_time.tm_sec;
+		while (diff_seconds >= 3600) {
 			//--------------------------------------------------------------------------------------------
 			// If the next window size is over an hour, update the list before expanding the window
 			//--------------------------------------------------------------------------------------------
@@ -241,10 +241,12 @@ bool processLogFile (const std::string& filename,
 			//--------------------------------------------------------------------------------------------
 			hour_freq -= freq_per_second[prev_second_of_hour];
 			freq_per_second[prev_second_of_hour] = 0;
-			if (++prev_second_of_hour >= 360) prev_second_of_hour = 0;
+			if (++prev_second_of_hour >= 3600) prev_second_of_hour = 0;
 			--diff_seconds;
 			++prev_seconds;
-			++prev_time.tm_sec;
+			prev_time = curr_time;
+			prev_time.tm_min -= diff_seconds / 60;
+			prev_time.tm_sec -= diff_seconds % 60;
 			mktime(&prev_time);
 		}
 		//----------------------------------------------------------------------------------------------
@@ -316,7 +318,7 @@ bool processLogFile (const std::string& filename,
 	if (prev_seconds != 0) {
 		prev_second_of_hour = prev_time.tm_min * 60 + prev_time.tm_sec;
 		int t = prev_second_of_hour;
-		const int et = (t + 359) % 360;
+		const int et = (t + 3599) % 3600;
 		while (t != et) {
 			pos = num_hours;
 			if (num_hours < 10) {
@@ -340,7 +342,7 @@ bool processLogFile (const std::string& filename,
 			freq_per_second[t] = 0;
 			++prev_time.tm_sec;
 			mktime(&prev_time);
-			if (++t >= 360) t = 0;
+			if (++t >= 3600) t = 0;
 		}
 	}
 
