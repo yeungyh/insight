@@ -3,7 +3,7 @@
 2. [Details of Implementation](README.md#details-of-implementation)
 
 
-# Required Library
+## Required Library
 The whole program is written in C++11 and only relies on the standard C++ library. However, the `get_time` and `put_time` functions are not included in GCC 4.9. GCC 5 or above is needed. Other compilers may also be used. A `makefile` is provided in the `src` directory.
 
 ## Details of Implementation
