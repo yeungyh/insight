@@ -68,6 +68,9 @@ bool parseRequest (const std::string& request,
 	return (code != 401);
 }
 
+//------------------------------------------------------------------------------------------------
+// Update the sorted list 
+//------------------------------------------------------------------------------------------------
 template<typename T1, typename T2>
 void updateList (std::vector<std::pair<T1, T2>>& list,
 								 int& size,
@@ -111,6 +114,24 @@ void updateList (std::vector<std::pair<T1, T2>>& list,
 	}
 }
 
+//------------------------------------------------------------------------------------------------
+// Update the time 
+//------------------------------------------------------------------------------------------------
+std::tm operator+ (std::tm time, int elapsed_sec)
+{
+	time.tm_sec += elapsed_sec;
+	const auto t = std::mktime(&time) - 5 * 60 * 60;
+	return *std::gmtime(&t);
+}
+
+std::tm operator- (std::tm time, int elapsed_sec)
+{
+	return time + -elapsed_sec;
+}
+
+//------------------------------------------------------------------------------------------------
+// Process the log file 
+//------------------------------------------------------------------------------------------------
 bool processLogFile (const std::string& filename,
 									 std::vector<std::pair<std::string, int>>& top_hosts,
 									 std::vector<std::pair<std::string, int>>& top_resources,
@@ -244,10 +265,7 @@ bool processLogFile (const std::string& filename,
 			if (++prev_second_of_hour >= 3600) prev_second_of_hour = 0;
 			--diff_seconds;
 			++prev_seconds;
-			prev_time = curr_time;
-			prev_time.tm_min -= diff_seconds / 60;
-			prev_time.tm_sec -= diff_seconds % 60;
-			mktime(&prev_time);
+			prev_time = curr_time - diff_seconds;
 		}
 		//----------------------------------------------------------------------------------------------
 		// Update the slot and total frequencies
